@@ -6,6 +6,7 @@ import {
   currentLevel,
   currentPacket,
   emitSlot,
+  getBestScoreKey,
   getProgress,
   nextLevel,
   nextTarget,
@@ -23,6 +24,7 @@ const els = {
   status: document.querySelector("#status"),
   level: document.querySelector("#level"),
   score: document.querySelector("#score"),
+  best: document.querySelector("#best"),
   combo: document.querySelector("#combo"),
   moves: document.querySelector("#moves"),
   message: document.querySelector("#message"),
@@ -44,10 +46,14 @@ const els = {
 const ctx = els.canvas.getContext("2d");
 let animationFrame = 0;
 let hintVisible = false;
+let bestScore = readBestScore(game.seedText);
+let recordedWinningScore = null;
 
 els.start.addEventListener("click", () => {
   startGame(game);
   hintVisible = false;
+  recordedWinningScore = null;
+  hideShareText();
   render();
 });
 
@@ -60,12 +66,15 @@ els.next.addEventListener("click", () => {
 els.retry.addEventListener("click", () => {
   resetLevel(game);
   hintVisible = false;
+  hideShareText();
   render();
 });
 
 els.reset.addEventListener("click", () => {
   resetRun(game);
   hintVisible = false;
+  recordedWinningScore = null;
+  hideShareText();
   render();
 });
 
@@ -75,7 +84,7 @@ els.hint.addEventListener("click", () => {
 });
 
 els.share.addEventListener("click", async () => {
-  const text = buildShareText(game);
+  const text = buildShareText(game, { bestScore });
   els.shareText.value = text;
   els.shareText.hidden = false;
   els.shareText.select();
@@ -127,6 +136,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 function render() {
+  recordBestScore();
   const progress = getProgress(game);
   const level = currentLevel(game);
   const packet = currentPacket(game);
@@ -136,6 +146,7 @@ function render() {
   els.status.textContent = statusLabel(game.status);
   els.level.textContent = `${progress.levelNumber}/${progress.levelCount} ${progress.levelName}`;
   els.score.textContent = String(game.score);
+  els.best.textContent = bestScore > 0 ? `${bestScore} pts` : "No run yet";
   els.combo.textContent = String(game.combo);
   els.moves.textContent = `${game.moves}/${level.par}`;
   els.message.textContent = hintVisible ? `${game.lastEvent} Hint: ${level.tip}` : game.lastEvent;
@@ -223,7 +234,56 @@ function renderShare() {
     return;
   }
 
-  els.shareText.value = buildShareText(game);
+  els.shareText.value = buildShareText(game, { bestScore });
+}
+
+function recordBestScore() {
+  if (game.status !== "won" || recordedWinningScore === game.score) {
+    return;
+  }
+
+  recordedWinningScore = game.score;
+
+  if (game.score > bestScore) {
+    const previous = bestScore;
+    bestScore = game.score;
+    const saved = writeBestScore(game.seedText, game.score);
+    if (previous > 0) {
+      game.lastEvent = saved
+        ? `New best today: ${game.score} pts, up from ${previous}.`
+        : `New best this tab: ${game.score} pts, up from ${previous}.`;
+    } else {
+      game.lastEvent = saved
+        ? `First best today saved: ${game.score} pts.`
+        : `First best this tab: ${game.score} pts.`;
+    }
+  } else if (game.score === bestScore && bestScore > 0) {
+    game.lastEvent = `Matched today's best: ${bestScore} pts.`;
+  } else if (bestScore > 0) {
+    game.lastEvent = `Final relay stable. Today's best remains ${bestScore} pts.`;
+  }
+}
+
+function readBestScore(seedText) {
+  try {
+    const score = Number(window.localStorage.getItem(getBestScoreKey(seedText)));
+    return Number.isFinite(score) && score > 0 ? score : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writeBestScore(seedText, score) {
+  try {
+    window.localStorage.setItem(getBestScoreKey(seedText), String(score));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function hideShareText() {
+  els.shareText.hidden = true;
 }
 
 function makeToken(tokenId, flags = {}) {

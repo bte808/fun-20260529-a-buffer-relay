@@ -10,6 +10,7 @@ Store incoming packets, emit the right slot, and match the target output before 
 - Uses a testable game engine with deterministic levels and a tiny solver check.
 - Works with mouse, touch, and keyboard controls.
 - Provides a compact share text for the final score.
+- Saves the best completed score for each Asia/Shanghai date in local browser storage.
 
 ## Why it is useful
 
@@ -77,5 +78,4 @@ handling, scoring, and share text.
 
 - Add a daily generated relay after the five hand-built levels.
 - Add a ghost replay that shows the par solution after a failed attempt.
-- Add local best score storage per Shanghai date.
 - Add an optional timed arcade mode.

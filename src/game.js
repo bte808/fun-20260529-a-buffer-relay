@@ -90,6 +90,10 @@ export function getShanghaiDateKey(date = new Date()) {
   return formatter.format(date);
 }
 
+export function getBestScoreKey(seedText = getShanghaiDateKey()) {
+  return `buffer-relay:best:${seedText}`;
+}
+
 export function createGame(options = {}) {
   return {
     status: "ready",
@@ -254,7 +258,7 @@ export function getProgress(game) {
   };
 }
 
-export function buildShareText(game) {
+export function buildShareText(game, options = {}) {
   const result =
     game.status === "won"
       ? "stable"
@@ -264,12 +268,18 @@ export function buildShareText(game) {
           ? "desynced"
           : "in progress";
 
-  return [
+  const lines = [
     `Buffer Relay ${game.seedText}`,
     `${result} - ${game.score} pts`,
     `${game.completedLevels}/${LEVELS.length} relays cleared`,
     `${game.moves} moves, ${game.drops} drops, ${game.glitches} glitches, best combo ${game.bestCombo}`
-  ].join("\n");
+  ];
+
+  if (Number.isFinite(options.bestScore) && options.bestScore > 0) {
+    lines.push(`Best today: ${options.bestScore} pts`);
+  }
+
+  return lines.join("\n");
 }
 
 export function findSolution(level) {

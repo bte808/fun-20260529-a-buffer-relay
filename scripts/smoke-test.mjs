@@ -4,6 +4,7 @@ import {
   buildShareText,
   createGame,
   emitSlot,
+  getBestScoreKey,
   findSolution,
   getShanghaiDateKey,
   getProgress,
@@ -16,6 +17,11 @@ assert.equal(
   getShanghaiDateKey(new Date("2026-05-28T16:30:00.000Z")),
   "2026-05-29",
   "date helper uses Asia/Shanghai"
+);
+assert.equal(
+  getBestScoreKey("2026-05-29"),
+  "buffer-relay:best:2026-05-29",
+  "best-score storage key is date scoped"
 );
 
 for (const level of LEVELS) {
@@ -70,5 +76,7 @@ const share = buildShareText(solvedFinal);
 assert.match(share, /Buffer Relay 2026-05-29/);
 assert.match(share, /stable/);
 assert.match(share, /pts/);
+const shareWithBest = buildShareText(solvedFinal, { bestScore: solvedFinal.score });
+assert.match(shareWithBest, /Best today: \d+ pts/);
 
-console.log("Smoke tests passed: Shanghai date, solvable levels, actions, scoring, failure, and share text.");
+console.log("Smoke tests passed: Shanghai date, best key, solvable levels, actions, scoring, failure, and share text.");
