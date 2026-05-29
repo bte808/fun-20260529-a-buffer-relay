@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Buffer Relay</title>
+    <meta
+      name="description"
+      content="A tiny browser puzzle about routing a packet stream through only two buffer slots."
+    />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell" id="app" data-status="ready">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Two slots. One packet stream. No spare memory.</p>
+          <h1>Buffer Relay</h1>
+          <p class="lede">
+            Flip packet pairs through a two-slot buffer and transmit the target sequence before the relay
+            desyncs.
+          </p>
+        </div>
+        <section class="scoreboard" aria-label="Run stats">
+          <div class="meter">
+            <span>Status</span>
+            <strong id="status">Ready</strong>
+          </div>
+          <div class="meter">
+            <span>Level</span>
+            <strong id="level">1/5 Warm Cache</strong>
+          </div>
+          <div class="meter">
+            <span>Score</span>
+            <strong id="score">0</strong>
+          </div>
+          <div class="meter">
+            <span>Combo</span>
+            <strong id="combo">0</strong>
+          </div>
+        </section>
+      </header>
+
+      <div class="game-grid">
+        <section class="board" aria-label="Relay board">
+          <canvas class="relay-canvas" id="relay-canvas" width="900" height="180"></canvas>
+
+          <div class="board-section">
+            <div class="section-head">
+              <h2>Input Belt</h2>
+              <span>Store with 1 or 2</span>
+            </div>
+            <div class="token-row" id="stream" aria-live="polite"></div>
+          </div>
+
+          <div class="board-section">
+            <div class="section-head">
+              <h2>Two-Slot Buffer</h2>
+              <span>Emit with Q or W</span>
+            </div>
+            <div class="slots">
+              <div class="slot" data-slot="0"></div>
+              <div class="slot" data-slot="1"></div>
+            </div>
+          </div>
+
+          <div class="board-section">
+            <div class="section-head">
+              <h2>Target Output</h2>
+              <span id="moves">0/4</span>
+            </div>
+            <div class="token-row" id="target"></div>
+          </div>
+        </section>
+
+        <aside>
+          <section class="control-panel" aria-label="Controls">
+            <h2>Controls</h2>
+            <div class="primary-actions">
+              <button id="start">Start Relay</button>
+              <button id="next" hidden>Next Relay</button>
+              <button class="secondary" id="retry" hidden>Retry Level</button>
+              <button class="secondary" id="reset" hidden>Reset Run</button>
+            </div>
+
+            <span class="action-label">Store current packet</span>
+            <div class="slot-actions">
+              <button data-put="0">1 -> Slot A <span class="button-token">--</span></button>
+              <button data-put="1">2 -> Slot B <span class="button-token">--</span></button>
+            </div>
+
+            <span class="action-label">Transmit slot</span>
+            <div class="emit-actions">
+              <button data-emit="0">Q -> Emit A <span class="button-token">--</span></button>
+              <button data-emit="1">W -> Emit B <span class="button-token">--</span></button>
+            </div>
+
+            <div class="utility-actions">
+              <button class="ghost" id="hint">Hint</button>
+              <button class="ghost" id="share">Share</button>
+              <button class="ghost" type="button" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">
+                Top
+              </button>
+            </div>
+          </section>
+
+          <section class="message-panel" aria-label="Relay log">
+            <h2>Relay Log</h2>
+            <p id="message">Press Start Relay, then keep only two packets alive.</p>
+            <textarea class="share-text" id="share-text" readonly hidden aria-label="Share text"></textarea>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
