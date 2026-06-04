@@ -1,7 +1,8 @@
 {
   "name": "fun-20260529-a-buffer-relay",
   "version": "1.0.0",
-  "description": "A tiny browser puzzle about routing a packet stream through only two buffer slots.",
+  "description": "A tiny two-slot packet puzzle with date-scoped challenge links and shareable scores.",
+  "homepage": "https://bte808.github.io/fun-20260529-a-buffer-relay/",
   "type": "module",
   "scripts": {
     "start": "python3 -m http.server 5209 --bind localhost",
@@ -11,9 +12,13 @@
   "keywords": [
     "browser-game",
     "daily-fun-project",
+    "github-pages",
     "javascript",
+    "local-storage",
     "memory-game",
+    "no-dependencies",
     "puzzle",
+    "shareable-challenge",
     "static-site"
   ],
   "license": "MIT"

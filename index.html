@@ -8,8 +8,14 @@
       name="description"
       content="A tiny browser puzzle about routing a packet stream through only two buffer slots."
     />
+    <meta property="og:title" content="Buffer Relay" />
+    <meta
+      property="og:description"
+      content="A tiny two-slot packet puzzle with date-scoped challenges and shareable scores."
+    />
+    <meta property="og:url" content="https://bte808.github.io/fun-20260529-a-buffer-relay/" />
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260604" />
   </head>
   <body>
     <main class="shell" id="app" data-status="ready">
@@ -36,8 +42,12 @@
             <strong id="score">0</strong>
           </div>
           <div class="meter">
-            <span>Best today</span>
+            <span id="best-label">Best today</span>
             <strong id="best">No run yet</strong>
+          </div>
+          <div class="meter">
+            <span>Challenge</span>
+            <strong id="seed">2026-05-29</strong>
           </div>
           <div class="meter">
             <span>Combo</span>
@@ -102,6 +112,7 @@
 
             <div class="utility-actions">
               <button class="ghost" id="hint">Hint</button>
+              <button class="ghost" id="challenge">Copy challenge</button>
               <button class="ghost" id="share">Share</button>
               <button class="ghost" type="button" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">
                 Top
@@ -118,6 +129,6 @@
       </div>
     </main>
 
-    <script type="module" src="./src/app.js"></script>
+    <script type="module" src="./src/app.js?v=20260604"></script>
   </body>
 </html>

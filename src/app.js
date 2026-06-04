@@ -1,6 +1,7 @@
 import {
   LEVELS,
   TOKENS,
+  buildChallengeUrl,
   buildShareText,
   createGame,
   currentLevel,
@@ -8,16 +9,22 @@ import {
   emitSlot,
   getBestScoreKey,
   getProgress,
+  getShanghaiDateKey,
   nextLevel,
   nextTarget,
+  normalizeChallengeDate,
   putPacket,
   resetLevel,
   resetRun,
   startGame,
   tokenLabel
-} from "./game.js";
+} from "./game.js?v=20260604";
 
-const game = createGame();
+const todaySeed = getShanghaiDateKey();
+const game = createGame({
+  seedText: normalizeChallengeDate(new URLSearchParams(window.location.search).get("date"), todaySeed)
+});
+const challengeUrl = buildChallengeUrl(game.seedText, window.location.href);
 
 const els = {
   app: document.querySelector("#app"),
@@ -25,6 +32,8 @@ const els = {
   level: document.querySelector("#level"),
   score: document.querySelector("#score"),
   best: document.querySelector("#best"),
+  bestLabel: document.querySelector("#best-label"),
+  seed: document.querySelector("#seed"),
   combo: document.querySelector("#combo"),
   moves: document.querySelector("#moves"),
   message: document.querySelector("#message"),
@@ -39,6 +48,7 @@ const els = {
   reset: document.querySelector("#reset"),
   hint: document.querySelector("#hint"),
   share: document.querySelector("#share"),
+  challenge: document.querySelector("#challenge"),
   shareText: document.querySelector("#share-text"),
   canvas: document.querySelector("#relay-canvas")
 };
@@ -84,19 +94,15 @@ els.hint.addEventListener("click", () => {
 });
 
 els.share.addEventListener("click", async () => {
-  const text = buildShareText(game, { bestScore });
-  els.shareText.value = text;
-  els.shareText.hidden = false;
-  els.shareText.select();
+  await copyText(
+    buildShareText(game, getShareOptions()),
+    "Score copied to clipboard.",
+    "Clipboard blocked. The share text is selected below."
+  );
+});
 
-  try {
-    await navigator.clipboard.writeText(text);
-    game.lastEvent = "Score copied to clipboard.";
-  } catch {
-    game.lastEvent = "Clipboard blocked. The share text is selected below.";
-  }
-
-  render();
+els.challenge.addEventListener("click", async () => {
+  await copyText(challengeUrl, "Challenge link copied.", "Clipboard blocked. The challenge link is selected below.");
 });
 
 for (const button of els.slotButtons) {
@@ -114,7 +120,7 @@ for (const button of els.emitButtons) {
 }
 
 document.addEventListener("keydown", (event) => {
-  if (event.target instanceof HTMLTextAreaElement) {
+  if (isInteractiveShortcutTarget(event.target)) {
     return;
   }
 
@@ -146,6 +152,8 @@ function render() {
   els.status.textContent = statusLabel(game.status);
   els.level.textContent = `${progress.levelNumber}/${progress.levelCount} ${progress.levelName}`;
   els.score.textContent = String(game.score);
+  els.seed.textContent = game.seedText;
+  els.bestLabel.textContent = getBestLabel();
   els.best.textContent = bestScore > 0 ? `${bestScore} pts` : "No run yet";
   els.combo.textContent = String(game.combo);
   els.moves.textContent = `${game.moves}/${level.par}`;
@@ -234,7 +242,9 @@ function renderShare() {
     return;
   }
 
-  els.shareText.value = buildShareText(game, { bestScore });
+  if (els.shareText.dataset.mode === "share") {
+    els.shareText.value = buildShareText(game, getShareOptions());
+  }
 }
 
 function recordBestScore() {
@@ -250,17 +260,17 @@ function recordBestScore() {
     const saved = writeBestScore(game.seedText, game.score);
     if (previous > 0) {
       game.lastEvent = saved
-        ? `New best today: ${game.score} pts, up from ${previous}.`
+        ? `New best ${getBestScope()}: ${game.score} pts, up from ${previous}.`
         : `New best this tab: ${game.score} pts, up from ${previous}.`;
     } else {
       game.lastEvent = saved
-        ? `First best today saved: ${game.score} pts.`
+        ? `First best ${getBestScope()} saved: ${game.score} pts.`
         : `First best this tab: ${game.score} pts.`;
     }
   } else if (game.score === bestScore && bestScore > 0) {
-    game.lastEvent = `Matched today's best: ${bestScore} pts.`;
+    game.lastEvent = `Matched best ${getBestScope()}: ${bestScore} pts.`;
   } else if (bestScore > 0) {
-    game.lastEvent = `Final relay stable. Today's best remains ${bestScore} pts.`;
+    game.lastEvent = `Final relay stable. Best ${getBestScope()} remains ${bestScore} pts.`;
   }
 }
 
@@ -284,6 +294,49 @@ function writeBestScore(seedText, score) {
 
 function hideShareText() {
   els.shareText.hidden = true;
+  els.shareText.dataset.mode = "";
+}
+
+async function copyText(text, copiedMessage, blockedMessage) {
+  els.shareText.value = text;
+  els.shareText.hidden = false;
+  els.shareText.dataset.mode = text.includes("\n") ? "share" : "challenge";
+  els.shareText.select();
+
+  try {
+    await navigator.clipboard.writeText(text);
+    game.lastEvent = copiedMessage;
+  } catch {
+    game.lastEvent = blockedMessage;
+  }
+
+  render();
+}
+
+function getShareOptions() {
+  return {
+    bestScore,
+    bestLabel: getBestLabel(),
+    challengeUrl
+  };
+}
+
+function getBestLabel() {
+  return game.seedText === todaySeed ? "Best today" : "Best for seed";
+}
+
+function getBestScope() {
+  return game.seedText === todaySeed ? "today" : "for this seed";
+}
+
+function isInteractiveShortcutTarget(target) {
+  return (
+    target instanceof HTMLButtonElement ||
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLSelectElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLAnchorElement
+  );
 }
 
 function makeToken(tokenId, flags = {}) {

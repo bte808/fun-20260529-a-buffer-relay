@@ -3,14 +3,17 @@
 Buffer Relay is a tiny browser puzzle about routing a packet stream through only two memory slots.
 Store incoming packets, emit the right slot, and match the target output before the relay desyncs.
 
+Public demo: https://bte808.github.io/fun-20260529-a-buffer-relay/
+
 ## What it can do
 
 - Presents five short relay puzzles with a clear start -> store/emit -> feedback -> score loop.
 - Runs as a dependency-free static page: HTML, CSS, and vanilla JavaScript.
 - Uses a testable game engine with deterministic levels and a tiny solver check.
 - Works with mouse, touch, and keyboard controls.
-- Provides a compact share text for the final score.
-- Saves the best completed score for each Asia/Shanghai date in local browser storage.
+- Copies a date-scoped challenge link such as `?date=2026-05-29` so another player can replay the same run label.
+- Provides a compact share text for the final score, local best, and challenge URL.
+- Saves the best completed score for each challenge date in local browser storage.
 
 ## Why it is useful
 
@@ -21,6 +24,16 @@ you only have two slots, and every overwrite can make the target sequence imposs
 
 The puzzles are small enough to learn in one round but still reward planning. Clean pair flips build combo points,
 wrong emits create glitches, and perfect runs feel like snapping a tiny packet machine into sync.
+
+## Why it is worth starring
+
+- It is a complete no-build browser toy that can be inspected, forked, and hosted as-is.
+- The rules are compact but teach a real constraint: two live buffers are enough only when you plan the emit order.
+- Challenge links and local-best storage make it easy to compare clean runs without accounts, servers, or tracking.
+
+## 2026-06-04 Maintenance Update
+
+This pass makes Buffer Relay public-demo ready: date-scoped `?date=YYYY-MM-DD` links load the same challenge label, `Copy challenge` shares the replay URL without exposing a solution path, final share text includes the challenge URL and seed-scoped best score, and the repo now points visitors to the GitHub Pages demo.
 
 ## Inspiration
 
@@ -62,6 +75,12 @@ Then open:
 http://localhost:5209
 ```
 
+To replay a labeled challenge date, open:
+
+```text
+http://localhost:5209/?date=2026-05-29
+```
+
 You can also open `index.html` directly in a modern browser.
 
 ## Validation
@@ -72,7 +91,7 @@ npm test
 ```
 
 The smoke test verifies the Asia/Shanghai date helper, every level's two-slot solvability, core actions, failure
-handling, scoring, and share text.
+handling, scoring, challenge links, and share text.
 
 ## Later ideas
 

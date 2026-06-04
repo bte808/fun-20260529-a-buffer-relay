@@ -37,6 +37,7 @@ button {
   background: #242220;
   color: #fffaf0;
   font-weight: 800;
+  overflow-wrap: anywhere;
   cursor: pointer;
   transition:
     transform 120ms ease,
@@ -114,9 +115,9 @@ h1 {
 
 .scoreboard {
   display: grid;
-  grid-template-columns: repeat(5, minmax(76px, 1fr));
+  grid-template-columns: repeat(6, minmax(76px, 1fr));
   gap: 8px;
-  min-width: min(520px, 100%);
+  min-width: min(620px, 100%);
 }
 
 .meter {
@@ -316,7 +317,7 @@ h1 {
 }
 
 .utility-actions {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .action-label {

@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import {
   LEVELS,
+  buildChallengeUrl,
   buildShareText,
   createGame,
   emitSlot,
   getBestScoreKey,
+  normalizeChallengeDate,
   findSolution,
   getShanghaiDateKey,
   getProgress,
@@ -22,6 +24,13 @@ assert.equal(
   getBestScoreKey("2026-05-29"),
   "buffer-relay:best:2026-05-29",
   "best-score storage key is date scoped"
+);
+assert.equal(normalizeChallengeDate("2026-05-29"), "2026-05-29", "valid challenge dates are accepted");
+assert.equal(normalizeChallengeDate("2026-02-31", "2026-05-29"), "2026-05-29", "invalid dates fall back");
+assert.equal(
+  buildChallengeUrl("2026-05-29", "http://localhost:5209/?v=old#debug"),
+  "http://localhost:5209/?date=2026-05-29",
+  "challenge links keep only the replay date"
 );
 
 for (const level of LEVELS) {
@@ -58,7 +67,7 @@ assert.equal(overwritten.drops, 1, "overwriting a filled slot counts as a drop")
 const finalRun = createGame({ seedText: "2026-05-29" });
 startGame(finalRun);
 for (let index = 0; index < LEVELS.length; index += 1) {
-  const { game: solved, solution } = playSolution(index);
+  const { game: solved, solution } = playSolution(index, { seedText: "2026-05-29" });
   assert.ok(solution.length <= LEVELS[index].par, `${LEVELS[index].name} solution stays compact`);
   assert.ok(
     solved.status === "level-complete" || solved.status === "won",
@@ -66,7 +75,7 @@ for (let index = 0; index < LEVELS.length; index += 1) {
   );
 }
 
-const solvedFinal = playSolution(LEVELS.length - 1).game;
+const solvedFinal = playSolution(LEVELS.length - 1, { seedText: "2026-05-29" }).game;
 assert.equal(solvedFinal.status, "won", "the final level can reach the win state");
 
 const progress = getProgress(game);
@@ -78,5 +87,14 @@ assert.match(share, /stable/);
 assert.match(share, /pts/);
 const shareWithBest = buildShareText(solvedFinal, { bestScore: solvedFinal.score });
 assert.match(shareWithBest, /Best today: \d+ pts/);
+const shareWithChallenge = buildShareText(solvedFinal, {
+  bestScore: solvedFinal.score,
+  bestLabel: "Best for seed",
+  challengeUrl: buildChallengeUrl("2026-05-29")
+});
+assert.match(shareWithChallenge, /Best for seed: \d+ pts/);
+assert.match(shareWithChallenge, /Challenge: https:\/\/bte808.github.io\/fun-20260529-a-buffer-relay\/\?date=2026-05-29/);
 
-console.log("Smoke tests passed: Shanghai date, best key, solvable levels, actions, scoring, failure, and share text.");
+console.log(
+  "Smoke tests passed: Shanghai date, challenge links, best key, solvable levels, actions, scoring, failure, and share text."
+);

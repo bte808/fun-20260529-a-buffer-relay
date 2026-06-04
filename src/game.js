@@ -79,6 +79,8 @@ export const LEVELS = [
   }
 ];
 
+export const PUBLIC_DEMO_URL = "https://bte808.github.io/fun-20260529-a-buffer-relay/";
+
 export function getShanghaiDateKey(date = new Date()) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai",
@@ -90,14 +92,43 @@ export function getShanghaiDateKey(date = new Date()) {
   return formatter.format(date);
 }
 
+export function isDateKey(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+export function normalizeChallengeDate(value, fallback = getShanghaiDateKey()) {
+  const candidate = typeof value === "string" ? value.trim() : "";
+  if (isDateKey(candidate)) {
+    return candidate;
+  }
+
+  return isDateKey(fallback) ? fallback : getShanghaiDateKey();
+}
+
 export function getBestScoreKey(seedText = getShanghaiDateKey()) {
-  return `buffer-relay:best:${seedText}`;
+  return `buffer-relay:best:${normalizeChallengeDate(seedText)}`;
+}
+
+export function buildChallengeUrl(seedText = getShanghaiDateKey(), href = PUBLIC_DEMO_URL) {
+  const url = new URL(href, PUBLIC_DEMO_URL);
+  url.search = "";
+  url.hash = "";
+  url.searchParams.set("date", normalizeChallengeDate(seedText));
+  return url.toString();
 }
 
 export function createGame(options = {}) {
+  const seedText = normalizeChallengeDate(options.seedText);
+
   return {
     status: "ready",
-    seedText: options.seedText || getShanghaiDateKey(),
+    seedText,
     levelIndex: options.levelIndex || 0,
     cursor: 0,
     targetIndex: 0,
@@ -276,7 +307,11 @@ export function buildShareText(game, options = {}) {
   ];
 
   if (Number.isFinite(options.bestScore) && options.bestScore > 0) {
-    lines.push(`Best today: ${options.bestScore} pts`);
+    lines.push(`${options.bestLabel || "Best today"}: ${options.bestScore} pts`);
+  }
+
+  if (typeof options.challengeUrl === "string" && options.challengeUrl.length > 0) {
+    lines.push(`Challenge: ${options.challengeUrl}`);
   }
 
   return lines.join("\n");
@@ -343,8 +378,8 @@ export function findSolution(level) {
   return null;
 }
 
-export function playSolution(levelIndex) {
-  const game = createGame({ levelIndex });
+export function playSolution(levelIndex, options = {}) {
+  const game = createGame({ levelIndex, seedText: options.seedText });
   game.status = "running";
   const solution = findSolution(currentLevel(game));
   if (!solution) {
